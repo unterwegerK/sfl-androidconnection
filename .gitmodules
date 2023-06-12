@@ -1,3 +1,3 @@
-[submodule "androidconnection/src/main/java/de/ku/sfl/connection"]
-	path = androidconnection/src/main/java/de/ku/sfl/connection
+[submodule "androidconnecteddatamodel/src/main/java/de/ku/sfl/connection"]
+	path = androidconnecteddatamodel/src/main/java/de/ku/sfl/connection
 	url = https://github.com/unterwegerK/sfl-connection.git
