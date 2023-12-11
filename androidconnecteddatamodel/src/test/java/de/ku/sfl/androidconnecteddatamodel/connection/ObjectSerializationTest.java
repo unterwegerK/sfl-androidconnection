@@ -13,14 +13,14 @@ import de.ku.sfl.connection.objects.DiscoveredReport;
 import de.ku.sfl.connection.objects.ReportVariant;
 import de.ku.sfl.connection.objects.ScannerType;
 
-import static de.ku.sfl.androidconnection.connection.Assert.*;
+import static de.ku.sfl.androidconnecteddatamodel.connection.Assert.*;
 
 public class ObjectSerializationTest {
     @Test
     public void testDiscoveredReportSerialization() throws JSONException {
         DiscoveredReport report = createDiscoveredReport();
         String serializedReport = report.serialize().toString();
-        DiscoveredReport deserializedReport = new DiscoveredReport(new JSONObject(serializedReport));
+        DiscoveredReport deserializedReport = new DiscoveredReport(new JSONObject(serializedReport), null);
 
         assertReportEquals(deserializedReport, report);
     }
