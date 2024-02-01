@@ -10,14 +10,19 @@ import android.util.Log;
 import java.util.HashSet;
 import java.util.Set;
 
+import de.ku.sfl.androidConnectedDataModel.ConnectionStateProvider;
 import de.ku.sfl.androidConnectedDataModel.DataModelService;
 import de.ku.sfl.androidConnectedDataModel.DataModelServiceBinder;
 import de.ku.sfl.connection.api.IConnectionStateListener;
 
 public class DataModelProvider<TDataModel> {
+    private final static String TAG = DataModelProvider.class.getCanonicalName();
+    private final IDataModelProviderListener listener;
     private final Context context;
     private final Class<?> dataModelType;
     private DataModelService dataModelService;
+
+    private ConnectionStateProvider connectionStateProvider = new ConnectionStateProvider();
 
     private final DataModelServiceConnection dataModelServiceConnection = new DataModelServiceConnection();
 
@@ -29,27 +34,30 @@ public class DataModelProvider<TDataModel> {
             Log.d("ServiceDemo", "Service connected");
             if(service instanceof DataModelServiceBinder<?>) {
                 dataModelService = ((DataModelServiceBinder<?>)service).getConnectionService();
-
-                if(dataModelService != null) {
-                    dataModelService.registerConnectionStateListeners(listeners);
-                }
+                connectionStateProvider.setDataModelService(dataModelService);
             }
         }
 
         public void onServiceDisconnected(ComponentName name) {
             Log.d("ServiceDemo", "Service disconnected");
             dataModelService = null;
+            connectionStateProvider.setDataModelService(null);
         }
     }
 
-    public DataModelProvider(Context context, Class<?> dataModelType) {
+    public DataModelProvider(IDataModelProviderListener listener, Context context, Class<?> dataModelType) {
+        this.listener = listener;
         this.context = context;
         this.dataModelType = dataModelType;
     }
 
-    public void onStarted() {
+    public void onStarted()  {
         Intent serviceIntent = new Intent(context, DataModelService.class);
-        context.bindService(serviceIntent, dataModelServiceConnection, Context.BIND_AUTO_CREATE);
+        boolean serviceAvailable = context.bindService(serviceIntent, dataModelServiceConnection, Context.BIND_AUTO_CREATE);
+
+        if(!serviceAvailable) {
+            Log.e(TAG, "The service " + DataModelService.class.getCanonicalName() + " has not been declared in the manifest or is unavailable for some other reason.");
+        }
     }
 
     public void onStopped() {
@@ -74,17 +82,9 @@ public class DataModelProvider<TDataModel> {
         return (TDataModel)dataModel;
     }
 
-    public void registerConnectionStateListener(IConnectionStateListener listener) {
-        boolean isUnknownListener = listeners.add(listener);
-        if(dataModelService != null && isUnknownListener) {
-            dataModelService.registerConnectionStateListener(listener);
-        }
+    public IConnectionStateProvider getConnectionStateProvider() {
+        return connectionStateProvider;
     }
 
-    public void unregisterConnectionStateListener(IConnectionStateListener listener) {
-        boolean isKnownListener = listeners.remove(listener);
-        if(dataModelService != null && isKnownListener) {
-            dataModelService.unregisterConnectionStateListener(listener);
-        }
-    }
+    public IConnectionSettings getConnectionSettings() { return dataModelService; }
 }

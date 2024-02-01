@@ -2,7 +2,7 @@ package de.ku.sfl.androidConnectedDataModel;
 
 import android.util.Log;
 
-import de.ku.sfl.connection.ILog;
+import de.ku.sfl.connection.api.ILog;
 
 public class LogCatLog implements ILog {
     @Override
@@ -13,6 +13,11 @@ public class LogCatLog implements ILog {
     @Override
     public void warning(String tag, String message) {
         Log.w(tag, message);
+    }
+
+    @Override
+    public void error(String tag, String message) {
+        Log.e(tag, message);
     }
 
     @Override

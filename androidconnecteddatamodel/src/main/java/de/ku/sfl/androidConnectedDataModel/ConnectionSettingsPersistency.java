@@ -5,7 +5,7 @@ import android.content.SharedPreferences;
 
 import java.net.InetSocketAddress;
 
-public class ConnectionSettings {
+public class ConnectionSettingsPersistency {
 
     public static final String PREFERENCES_KEY = "ConnectionSettings";
     public static final String SERVER_ADDRESS_KEY = "ServerAddress";
@@ -13,7 +13,7 @@ public class ConnectionSettings {
     public static final String DEVICE_NAME_KEY = "DeviceName";
     private final SharedPreferences preferences;
 
-    public ConnectionSettings(Context context) {
+    public ConnectionSettingsPersistency(Context context) {
         preferences = context.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
     }
 

@@ -1,25 +1,30 @@
 package de.ku.sfl.androidConnectedDataModel;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetSocketAddress;
 import java.util.Set;
 
+import de.ku.sfl.androidConnectedDataModel.api.IConnectedDataModel;
+import de.ku.sfl.androidConnectedDataModel.api.IConnectionSettings;
 import de.ku.sfl.connection.Connection;
 import de.ku.sfl.connection.api.IConnectionStateListener;
+import de.ku.sfl.connection.api.ILog;
 
-public class DataModelService extends Service {
+public class DataModelService extends Service implements IConnectionSettings {
     public static final String DATA_MODEL_TYPE_NAME_ID = "TypeName";
 
     private final DataModelServiceBinder binder;
-    private Object dataModel;
+    private IConnectedDataModel dataModel;
 
     private Connection connection;
 
-    private ConnectionSettings settings;
+    private ConnectionSettingsPersistency settings;
 
     public DataModelService() {
         binder = new DataModelServiceBinder(this);
@@ -30,7 +35,7 @@ public class DataModelService extends Service {
         super.onCreate();
         Log.d("ServiceDemo", "onCreate");
 
-        settings = new ConnectionSettings(getApplicationContext());
+        settings = new ConnectionSettingsPersistency(getApplicationContext());
     }
 
     @Override
@@ -65,9 +70,11 @@ public class DataModelService extends Service {
         if(dataModelTypeName != null) {
             try {
                 Class dataModelType = Class.forName(dataModelTypeName);
-                dataModel = dataModelType.newInstance();
+                dataModel = (IConnectedDataModel) dataModelType.getConstructor(Context.class).newInstance(new Object[]{getApplicationContext()});
 
-                connection = new Connection(new DataModelMessageDispatcher(), new LogCatLog());
+                ILog log = new LogCatLog();
+                connection = new Connection(new MessageDispatcher(getApplicationContext(), dataModel.getMessageReceiver(), log), log);
+                dataModel.setMessageSender(new MessageSender(connection, log));
                 connection.setDeviceName(settings.getDeviceName());
                 connection.setServerAddress(settings.getServerAddress());
                 connection.connectToServer();
@@ -77,6 +84,10 @@ public class DataModelService extends Service {
                 Log.e("Connected data model", "Problem when instantiating type " + dataModelTypeName + ": " + e.toString());
             } catch (InstantiationException e) {
                 Log.e("Connected data model", "Problem when instantiating type " + dataModelTypeName + ": " + e.toString());
+            } catch (InvocationTargetException e) {
+                Log.e("Connected data model", "Type " + dataModelTypeName + " does not provide a constructor taking a Context parameter.");
+            } catch (NoSuchMethodException e) {
+                Log.e("Connected data model", "Type " + dataModelTypeName + " does not provide a constructor taking a Context parameter.");
             }
         }
         else
@@ -116,6 +127,31 @@ public class DataModelService extends Service {
     public void unregisterConnectionStateListener(IConnectionStateListener listener) {
         if(connection != null) {
             connection.unregisterConnectionStateListener(listener);
+        }
+    }
+
+    @Override
+    public String getDeviceName() {
+        return settings.getDeviceName();
+    }
+
+    @Override
+    public InetSocketAddress getServerAddress() {
+        return settings.getServerAddress();
+    }
+
+    @Override
+    public void setSettings(String deviceName, InetSocketAddress serverAddress) {
+        if(deviceName != settings.getDeviceName()
+            || serverAddress.getHostName() != settings.getServerAddress().getHostName()
+            || serverAddress.getPort() != settings.getServerAddress().getPort()) {
+            settings.setDeviceName(deviceName);
+            settings.setServerAddress(serverAddress);
+
+            connection.disconnectFromServer();
+            connection.setDeviceName(deviceName);
+            connection.setServerAddress(serverAddress);
+            connection.connectToServer();
         }
     }
 }

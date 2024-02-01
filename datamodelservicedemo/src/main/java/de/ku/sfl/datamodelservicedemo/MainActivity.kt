@@ -9,12 +9,13 @@ import androidx.appcompat.app.AppCompatActivity
 import de.ku.sfl.androidConnectedDataModel.DataModelService
 import de.ku.sfl.androidConnectedDataModel.api.DataModelAnchor
 import de.ku.sfl.androidConnectedDataModel.api.DataModelProvider
+import de.ku.sfl.androidConnectedDataModel.api.IDataModelProviderListener
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), IDataModelProviderListener {
 
     private var dataModelService: DataModelService/*<DemoDataModel>*/? = null
     private val dataModelAnchor = DataModelAnchor(this, DemoDataModel::class.java)
-    private val dataModelProvider = DataModelProvider<DemoDataModel>(this, DemoDataModel::class.java)
+    private val dataModelProvider = DataModelProvider<DemoDataModel>(this, this, DemoDataModel::class.java)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,5 +49,13 @@ class MainActivity : AppCompatActivity() {
         dataModelProvider.onStopped()
         super.onStop()
         Log.d("ServiceDemo", "MainActivity.onStop")
+    }
+
+    override fun onDataModelAvailable() {
+
+    }
+
+    override fun onDataModelUnavailable() {
+
     }
 }

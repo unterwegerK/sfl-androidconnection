@@ -42,7 +42,7 @@ publishing {
         androidConnectedDataModel(MavenPublication) {
             groupId = 'de.ku.sfl'
             artifactId = 'androidconnecteddatamodel'
-            version = '2024.0.0'
+            version = '2024.2.0'
             afterEvaluate {
                 from components.release
             }
@@ -61,4 +61,5 @@ dependencies {
     implementation 'org.zeromq:jeromq:0.3.5'
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.json:json:20230227'
+    implementation 'com.google.protobuf:protobuf-java:3.17.3'
 }
